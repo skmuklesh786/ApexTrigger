@@ -1,4 +1,4 @@
-//Whenever a Contacts description is update then its Parent Account description should also
+// Question:Whenever a Contacts description is update then its Parent Account description should also
 //get updated by it?
 
  trigger contactDescriptionChange on Contact (after update) {
