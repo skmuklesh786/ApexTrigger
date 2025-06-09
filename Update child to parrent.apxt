@@ -1,0 +1,55 @@
+//Whenever a Contacts description is update then its Parent Account description should also
+//get updated by it?
+
+ trigger contactDescriptionChange on Contact (after update) {
+    
+    Set<Id>s=new Set<Id>();
+    if(trigger.IsAfter && trigger.isUpdate){
+        if(!trigger.new.isEmpty()){
+            for(Contact c:trigger.new){
+                if(c.AccountId !=null && trigger.oldMap.get(c.Id).Description!=c.Description){
+                    s.add(c.AccountId);
+                }
+                
+                
+            }
+            
+        } 
+        system.debug(s);
+        
+    }
+    
+    if(!s.isEmpty()){
+        List<Account>ad=new List<Account>();
+        /*
+		//STEP 1:
+        Map<Id,Account>m=new Map<Id,Account>([select Id,Name,Description from Account where Id=:s]);
+        if(!trigger.new.isEmpty()){
+            for(Contact cc:trigger.new){
+                Account ac=m.get(cc.AccountId);
+                ac.Description=cc.Description;
+                ad.add(ac);
+            }
+            if(!ad.isEmpty()){
+                update ad;
+            }
+            
+        }*/
+		
+		//STEP 2:
+		List<Account>m=[select Id,Name,Description,(select id,Accountid,Description from Contacts) from Account where Id=:s];
+        if(!m.isEmpty()){
+            System.debug('the value of cc.id==>  '+m);
+            for(Account cc:m){
+                
+               cc.id=cc.Contacts[0].AccountId;
+                System.debug('the value of cc.id==>  '+cc.id);
+                cc.Description=cc.Contacts[0].Description;
+                System.debug('the value of cc.Description ==>  '+ cc.Description);
+                ad.add(cc);
+            }
+		
+    }
+    
+}
+ 
