@@ -1,0 +1,106 @@
+//trigger rool up summary:
+//trigger to count number of contacts associated with an account and display the contacs count on 
+//Account custom field? 
+  
+trigger ContactTriggerTest on Contact (After  Insert,After Update ,After Delete) {
+    
+    Set<Id>s=new Set<Id>();
+    if(trigger.isAfter && trigger.isInsert ){
+        
+        if(trigger.new !=null){
+            for(Contact c:trigger.new){
+                if(c.AccountId!=null){
+                    s.add(c.AccountId);
+                }
+                
+            }
+            
+        }
+    }
+    
+    if(Trigger.IsAfter && trigger.IsUpdate ){
+        for(Contact c:trigger.new){  
+            if(Trigger.oldMap.get(c.Id).AccountId !=c.AccountId){
+                if(Trigger.oldMap.get(c.Id).AccountId !=null){
+                    s.add(Trigger.oldMap.get(c.Id).AccountId);
+                }
+                if(c.AccountId !=null){
+                    s.add(c.AccountId);
+                }
+                
+                
+            }
+        }      
+    }
+    if(Trigger.IsAfter && trigger.IsDelete ){
+        if(Trigger.old !=null){
+            for(Contact c:Trigger.old){
+                if( c.AccountId!=null){
+                    s.add(c.AccountId);
+                }
+                
+            }
+        }
+        
+    }
+    //Step--1 ONLY WORK 50K DATA MORE THAN 50K DATA SHOWING ERROR.
+    ////BY THE HELP OF Innery  QUERY.LINE 42-59
+    /*if(! s.isEmpty()){
+List<Account>se= new List<Account>();
+List<Account>ss=[select Id,Number_of_Contact__c,(select Id from Contacts) from Account where Id=:s];
+if(! ss.isEmpty()){
+for(Account a:ss){
+a.Number_of_Contact__c=a.Contacts.size();
+se.add(a);
+
+}
+
+}
+if(! se.isEmpty()){
+update se;
+}
+
+}*/
+    
+    //Step--2 ONLY WORK 50K DATA MORE THAN 50K DATA
+    ////BY THE HELP OF Aggregate QUERY.LINE 68-84
+    
+    if(! s.isEmpty()){
+        List<AggregateResult>ag=[select count(Id)con, AccountId from Contact where AccountId=:s group by AccountId];
+        List<Account>ss=new List<Account>();
+        //Map<Id,Account>ss=new Map<Id,Account>();
+        if(! ag.isEmpty()){
+            for(AggregateResult agg:ag){
+                Account a=new Account();
+                a.Id=(string)agg.get('AccountId');//agg.get('AccountId'); return korbe object tai type cast korlam.
+                a.Number_of_Contact__c=(Integer)agg.get('con');//agg.get('con');; return korbe object tai type cast korlam.
+                ss.add(a);
+            }
+            
+        } 
+        else{
+            for(Id st:s){//if contact is delete also show last contact data.
+            Account a=new Account();
+                a.Id=st;
+                a.Number_of_Contact__c=0;
+                ss.add(a);
+            }
+        }
+        
+        update ss;
+        
+    }  
+    
+    
+}
+   
+        
+  
+
+
+
+
+	 
+  
+	 
+ 
