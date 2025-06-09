@@ -1,0 +1,30 @@
+//QUESTION:whenever Account Phone field is update then all related Contacts phone field should also
+//get update with parrent account?
+ 
+trigger acctest on Account (After Update) {
+    
+    Map<Id,Account>m=new Map<Id,Account>();
+    List<Contact>aa=new List<Contact>(); 
+    if(Trigger.IsAfter &&   Trigger.IsUpdate){
+        for(Account a:trigger.new){
+            if(trigger.oldMap.get(a.Id).Phone !=a.Phone){
+                m.put(a.Id,a);
+            }
+            
+        }
+        
+    }
+    List<Contact>c=[select Id,Phone,LastName,AccountId from Contact where AccountId=:m.keySet()];
+    if(c !=null){
+        for(Contact cc:c){
+            cc.Phone=m.get(cc.AccountId).Phone;
+            aa.add(cc);
+        }
+    }
+    if(aa !=null){
+        update aa;
+    }
+}
+
+ 
+ 
